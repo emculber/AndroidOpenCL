@@ -5,12 +5,19 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.*
 import android.widget.TextView
+import android.Manifest
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
+import org.opencv.core.Core
 
 internal class MainActivity : Activity() {
-    private var mView: MyGLSurfaceView? = null
-    private var mProcMode: TextView? = null
+    var mView: MyGLSurfaceView? = null
+    var mProcMode: TextView? = null
 
     public override fun onCreate(savedInstanceState: Bundle?) {
+        val permissions = arrayOf(android.Manifest.permission.CAMERA)
+        ActivityCompat.requestPermissions(this, permissions,0)
+
         super.onCreate(savedInstanceState)
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.setFlags(

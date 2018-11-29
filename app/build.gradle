@@ -22,15 +22,17 @@ android {
         }
     }
     // Encapsulates your external native build configurations.
-  externalNativeBuild {
+    externalNativeBuild {
 
-    // Encapsulates your CMake build configurations.
-    cmake {
+        // Encapsulates your CMake build configurations.
+        cmake {
 
-      // Provides a relative path to your CMake build script.
-      path "CMakeLists.txt"
+            // Provides a relative path to your CMake build script.
+            path "CMakeLists.txt"
+        }
     }
-  }
+    buildToolsVersion '28.0.3'
+    sourceSets { main { jni.srcDirs = ['src/main/jni', 'src/main/jniLibs'] } }
 }
 
 dependencies {
@@ -41,5 +43,16 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation project(':openCVLibrary342')
+    implementation project(':openCVLibrary343')
+}
+
+android {
+    defaultConfig {
+        ndk {
+            moduleName "yourlib"
+            stl "stlport_static"
+            ldLibs "log", "z"
+            cFlags "-IPATH_TO_CL_FOLDER"
+        }
+    }
 }

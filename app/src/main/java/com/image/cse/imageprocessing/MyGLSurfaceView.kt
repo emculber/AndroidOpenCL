@@ -55,7 +55,7 @@ class MyGLSurfaceView(context: Context, attrs: AttributeSet) : CameraGLSurfaceVi
         (context as Activity).runOnUiThread {
             Toast.makeText(context, "onCameraViewStarted", Toast.LENGTH_SHORT).show()
         }
-        NativePart.initCL()
+//        NativePart.initCL()
         frameCounter = 0
         lastNanoTime = System.nanoTime()
     }

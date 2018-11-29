@@ -1,6 +1,5 @@
 #define __CL_ENABLE_EXCEPTIONS
 #define CL_USE_DEPRECATED_OPENCL_1_1_APIS /*let's give a chance for OpenCL 1.1 devices*/
-#include <CL/cl.hpp>
 
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
@@ -10,6 +9,8 @@
 #include <opencv2/core/ocl.hpp>
 
 #include "common.hpp"
+
+#include <CL/cl.hpp>
 
 const char oclProgB2B[] = "// clBuffer to clBuffer";
 const char oclProgI2B[] = "// clImage to clBuffer";
