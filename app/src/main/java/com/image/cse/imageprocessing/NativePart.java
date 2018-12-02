@@ -4,7 +4,7 @@ public class NativePart {
     static
     {
         System.loadLibrary("opencv_java3");
-        //System.loadLibrary("JNIpart");
+        System.loadLibrary("JNIpart");
     }
 
     public static final int PROCESSING_MODE_NO_PROCESSING = 0;

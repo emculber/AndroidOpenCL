@@ -14,23 +14,37 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11 -stdlib=libc++ -lEGL -lGLESv2"
+                arguments "-DANDROID_STL=c++_shared"
+            }
+        }
+        ndk {
+            abiFilters 'armeabi-v7a'
+            stl 'c++_shared'
+        }
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        debug{}
     }
     // Encapsulates your external native build configurations.
-  externalNativeBuild {
-
-    // Encapsulates your CMake build configurations.
-    cmake {
-
-      // Provides a relative path to your CMake build script.
-      path "CMakeLists.txt"
+    externalNativeBuild {
+        /*
+        cmake {
+            path "CMakeLists.txt"
+        }
+        */
+        ndkBuild() {
+            path "Android.mk"
+        }
     }
-  }
+    buildToolsVersion '28.0.3'
+    sourceSets { main { jni.srcDirs = ['src/main/jni', 'src/main/jniLibs'] } }
 }
 
 dependencies {
@@ -41,5 +55,5 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation project(':openCVLibrary342')
+    implementation project(':openCVLibrary343')
 }

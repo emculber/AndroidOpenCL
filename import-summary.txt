@@ -71,6 +71,7 @@ so manually move them:
 * javadoc/org/opencv/core/MatOfPoint3f.html
 * javadoc/org/opencv/core/MatOfRect.html
 * javadoc/org/opencv/core/MatOfRect2d.html
+* javadoc/org/opencv/core/MatOfRotatedRect.html
 * javadoc/org/opencv/core/Point.html
 * javadoc/org/opencv/core/Point3.html
 * javadoc/org/opencv/core/Range.html
@@ -222,11 +223,11 @@ Moved Files:
 Android Gradle projects use a different directory structure than ADT
 Eclipse projects. Here's how the projects were restructured:
 
-* AndroidManifest.xml => openCVLibrary342/src/main/AndroidManifest.xml
-* lint.xml => openCVLibrary342/lint.xml
-* res/ => openCVLibrary342/src/main/res/
-* src/ => openCVLibrary342/src/main/java/
-* src/org/opencv/engine/OpenCVEngineInterface.aidl => openCVLibrary342/src/main/aidl/org/opencv/engine/OpenCVEngineInterface.aidl
+* AndroidManifest.xml => openCVLibrary343/src/main/AndroidManifest.xml
+* lint.xml => openCVLibrary343/lint.xml
+* res/ => openCVLibrary343/src/main/res/
+* src/ => openCVLibrary343/src/main/java/
+* src/org/opencv/engine/OpenCVEngineInterface.aidl => openCVLibrary343/src/main/aidl/org/opencv/engine/OpenCVEngineInterface.aidl
 
 Next Steps:
 -----------

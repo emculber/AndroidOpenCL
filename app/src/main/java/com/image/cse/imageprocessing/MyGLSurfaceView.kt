@@ -28,12 +28,12 @@ class MyGLSurfaceView(context: Context, attrs: AttributeSet) : CameraGLSurfaceVi
 
     override fun surfaceCreated(holder: SurfaceHolder) {
         super.surfaceCreated(holder)
-        //NativePart.initCL();
+        NativePart.initCL()
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        //NativePart.closeCL();
         super.surfaceDestroyed(holder)
+        NativePart.closeCL()
     }
 
     fun setProcessingMode(newMode: Int) {
@@ -55,7 +55,7 @@ class MyGLSurfaceView(context: Context, attrs: AttributeSet) : CameraGLSurfaceVi
         (context as Activity).runOnUiThread {
             Toast.makeText(context, "onCameraViewStarted", Toast.LENGTH_SHORT).show()
         }
-        NativePart.initCL()
+//        NativePart.initCL()
         frameCounter = 0
         lastNanoTime = System.nanoTime()
     }
