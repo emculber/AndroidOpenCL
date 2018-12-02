@@ -57,3 +57,14 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation project(':openCVLibrary343')
 }
+
+android {
+    defaultConfig {
+        ndk {
+            moduleName "yourlib"
+            stl "stlport_static"
+            ldLibs "log", "z"
+            cFlags "-IPATH_TO_CL_FOLDER"
+        }
+    }
+}
