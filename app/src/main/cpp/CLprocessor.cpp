@@ -92,15 +92,6 @@ namespace clp {
     bool haveOpenCL = false;
 }
 
-opencl::PlatformInfo        m_platformInfo;
-opencl::DeviceInfo          m_deviceInfo;
-std::vector<cl_platform_id> m_platform_ids;
-cl_context m_context;
-cl_device_id                m_device_id;
-cl_command_queue            m_queue;
-cl_program                  m_program;
-cl_kernel                   m_kernelBuf;
-cl_kernel                   m_kernelImg;
 extern "C" void initCL()
 {
     dumpCLinfo();
