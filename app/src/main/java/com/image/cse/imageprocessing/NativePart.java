@@ -15,4 +15,5 @@ public class NativePart {
     public static native int initCL();
     public static native void closeCL();
     public static native void processFrame(int tex1, int tex2, int w, int h, int mode);
+    public static native long sendImage(long inputImage);
 }
