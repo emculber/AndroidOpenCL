@@ -7,19 +7,52 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity"
         android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
-
-    <Button
-            android:text="Process"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/CameraButton" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
-            android:layout_marginBottom="12dp" app:layout_constraintBottom_toBottomOf="parent"
-            android:onClick="takePicture"/>
     <ImageView
             android:id="@+id/imageView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="0dp" android:layout_marginTop="0dp" app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginEnd="0dp"/>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintVertical_bias="0.0"/>
+
+    <Button
+            android:text="Offload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/OffloadButton" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="80dp"
+            android:layout_marginBottom="60dp" app:layout_constraintBottom_toBottomOf="parent"/>
+    <Button
+            android:text="Offload Loop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/OffloadWithLoadButton"
+            android:layout_marginBottom="56dp" app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="60dp"/>
+    <Button
+            android:text="Onload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/OnloadButton" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="80dp"
+            android:layout_marginBottom="8dp" app:layout_constraintBottom_toBottomOf="parent"/>
+    <Button
+            android:text="Onload Loop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/OnloadWithLoadButton"
+            android:layout_marginBottom="8dp" app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="64dp"/>
+    <TextView
+            android:text="TextView"
+            android:layout_width="367dp"
+            android:layout_height="46dp"
+            android:id="@+id/processTime" android:textSize="14sp" android:textColor="@android:color/background_dark"
+            android:layout_marginTop="8dp" app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp" app:layout_constraintEnd_toEndOf="parent"/>
 </android.support.constraint.ConstraintLayout>

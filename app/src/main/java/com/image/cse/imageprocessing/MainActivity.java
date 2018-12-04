@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -22,9 +23,14 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+import org.w3c.dom.Text;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.OnShowRationale;
 import permissions.dispatcher.PermissionRequest;
@@ -35,20 +41,30 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 
 @RuntimePermissions
 public class MainActivity extends Activity implements View.OnClickListener {
 
     private static final int REQUEST_TAKE_PHOTO = 1;
+    private boolean isOffload = false;
+    private boolean isLoop = false;
 
-    Button btnTakePhoto;
+    ArrayList<Long> times = new ArrayList<>();
+    ArrayList<Long> timesProcess = new ArrayList<>();
+
+    Button btnImageOffload;
+    Button btnImageOnload;
+    Button btnImageOffloadWithLoad;
+    Button btnImageOnloadWithLoad;
     ImageView ivPreview;
+    TextView processTime;
 
     String mCurrentPhotoPath;
 
-    Socket socket;
     File file;
     Uri imageUri;
 
@@ -65,7 +81,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         );
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         setContentView(R.layout.activity_main);
 
@@ -79,10 +95,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     private void initInstances() {
-        btnTakePhoto = (Button) findViewById(R.id.CameraButton);
+        btnImageOffload = (Button) findViewById(R.id.OffloadButton);
+        btnImageOnload = (Button) findViewById(R.id.OnloadButton);
+        btnImageOffloadWithLoad = (Button) findViewById(R.id.OffloadWithLoadButton);
+        btnImageOnloadWithLoad = (Button) findViewById(R.id.OnloadWithLoadButton);
         ivPreview = (ImageView) findViewById(R.id.imageView);
+        processTime = (TextView) findViewById(R.id.processTime);
 
-        btnTakePhoto.setOnClickListener(this);
+        btnImageOffload.setOnClickListener(this);
+        btnImageOnload.setOnClickListener(this);
+        btnImageOffloadWithLoad.setOnClickListener(this);
+        btnImageOnloadWithLoad.setOnClickListener(this);
 
     }
 
@@ -92,8 +115,22 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        if (view == btnTakePhoto) {
+        if (view == btnImageOnload) {
             MainActivityPermissionsDispatcher.startCameraWithCheck(this);
+            isOffload = false;
+            isLoop = false;
+        } else if (view == btnImageOffload) {
+            MainActivityPermissionsDispatcher.startCameraWithCheck(this);
+            isOffload = true;
+            isLoop = false;
+        } else if (view == btnImageOnloadWithLoad) {
+            MainActivityPermissionsDispatcher.startCameraWithCheck(this);
+            isOffload = false;
+            isLoop = true;
+        } else if (view == btnImageOffloadWithLoad) {
+            MainActivityPermissionsDispatcher.startCameraWithCheck(this);
+            isOffload = true;
+            isLoop = true;
         }
     }
 
@@ -132,37 +169,78 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        long startProcessTime;
+        long endProcessTime;
+        long endTime;
 
+        int width;
+        int heigth;
 
+        long startTime = System.currentTimeMillis();
 
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
-            // Show the thumbnail on ImageView
-            imageUri = Uri.parse(mCurrentPhotoPath);
-            file = new File(imageUri.getPath());
-            Log.i("", imageUri.getPath());
-            //new ConnectSocket().execute();
+            int count = 0;
+            do {
+                // Show the thumbnail on ImageView
+                imageUri = Uri.parse(mCurrentPhotoPath);
+                file = new File(imageUri.getPath());
+                Log.i("", imageUri.getPath());
 
-            try {
+                try {
 
-                InputStream ims = new FileInputStream(file);
-                Bitmap bitmap = BitmapFactory.decodeStream(ims);
-                ivPreview.setImageBitmap(bitmap);
+                    InputStream ims = new FileInputStream(file);
+                    Bitmap bitmap = BitmapFactory.decodeStream(ims);
+                    ivPreview.setImageBitmap(bitmap);
 
-                final Mat inputImage=new Mat();//The input image to be sent
-                Utils.bitmapToMat(bitmap,inputImage); //change the bitmap to mat to pass the image as argument
-                //final Mat outputImage=new Mat();//The result image to be returned
+                    final Mat inputImage=new Mat();//The input image to be sent
+                    Utils.bitmapToMat(bitmap,inputImage); //change the bitmap to mat to pass the image as argument
+                    //final Mat outputImage=new Mat();//The result image to be returned
 
-                int[] colors={0};
-                //Bitmap outputImageBitmap=Bitmap.createBitmap(colors,inputImage.cols(),inputImage.rows(),Bitmap.Config.RGB_565);// I think this creates a bitmap equals to inputImage height and width and RGB channels.
-                final Mat outputImage = new Mat(NativePart.sendImage(inputImage.getNativeObjAddr()));//call to native method
-                //Utils.matToBitmap(outputImage,outputImageBitmap);//the outputImage is changed into Bitmap in order to be displayed in the image view
-                Utils.matToBitmap(outputImage,bitmap);//the outputImage is changed into Bitmap in order to be displayed in the image view
+                    int[] colors={0};
+                    //Bitmap outputImageBitmap=Bitmap.createBitmap(colors,inputImage.cols(),inputImage.rows(),Bitmap.Config.RGB_565);// I think this creates a bitmap equals to inputImage height and width and RGB channels.
+                    Mat outputImage = new Mat();
+                    startProcessTime = System.currentTimeMillis();
+                    if (isOffload) {
+                        outputImage = new Mat(NativePart.sendImage(inputImage.getNativeObjAddr()));//call to native method
+                    } else {
+                        outputImage = new Mat(inputImage.size(), CvType.CV_8UC1);
+                        Imgproc.cvtColor(inputImage, outputImage, Imgproc.COLOR_RGB2GRAY, 4);
+                        Imgproc.Canny(outputImage, outputImage, 80, 100);
+                        Imgproc.blur(outputImage, outputImage, new Size(50, 50));
+                    }
+                    endProcessTime = System.currentTimeMillis();
+                    Log.i("", "Process Time: " + (endProcessTime - startProcessTime));
+                    //Utils.matToBitmap(outputImage,outputImageBitmap);//the outputImage is changed into Bitmap in order to be displayed in the image view
+                    Utils.matToBitmap(outputImage,bitmap);//the outputImage is changed into Bitmap in order to be displayed in the image view
 
-                //ivPreview.setImageBitmap(outputImageBitmap);
-                ivPreview.setImageBitmap(bitmap);
-            } catch (FileNotFoundException e) {
-                return;
-            }
+
+                    Matrix matrix = new Matrix();
+                    matrix.postRotate(90);
+                    width = bitmap.getWidth();
+                    heigth = bitmap.getHeight();
+                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(), bitmap.getHeight(), true);
+                    Bitmap rotatedBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
+                    //ivPreview.setImageBitmap(outputImageBitmap);
+                    ivPreview.setImageBitmap(rotatedBitmap);
+                } catch (FileNotFoundException e) {
+                    return;
+                }
+
+                endTime = System.currentTimeMillis();
+                Log.i("", "Total Time: " + (endTime-startTime));
+                long diffProcess = (endProcessTime-startProcessTime);
+                long diff = (endTime-startTime);
+                times.add(diff);
+                timesProcess.add(diffProcess);
+                int avgTime = (int)calculateAverage(times);
+                int avgTimeProcess = (int)calculateAverage(timesProcess);
+                String timeProcess = "Times: " + times.size() + " Total:" + diff + "(" + avgTime + ") Process: " + diffProcess + "(" + avgTimeProcess + ") : " + width + "x" + heigth;
+                processTime.setText(timeProcess);
+                if(count == 10) {
+                    break;
+                }
+                count++;
+            } while (isLoop);
 
             file.delete();
 
@@ -174,6 +252,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         }
                     });
         }
+    }
+
+    private double calculateAverage(List<Long> marks) {
+        Long sum = 0L;
+        if(!marks.isEmpty()) {
+            for (Long mark : marks) {
+                sum += mark;
+            }
+            return sum.doubleValue() / marks.size();
+        }
+        return sum;
     }
 
     @Override
@@ -219,58 +308,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
             }
-        }
-    }
-
-    class ConnectSocket extends AsyncTask<String, Void, Void> {
-        public Void doInBackground(String... urls) {
-            try {
-                Log.v("DEV", "SocketClass, connectSocket");
-                SocketAddress socketAddress = new InetSocketAddress("home.luwsnet.com", 5050);
-                ObjectOutputStream oos = null;
-                ObjectInputStream ois = null;
-                java.util.Date date = null;
-
-                try {
-                    socket = new Socket();
-                    socket.setTcpNoDelay(true);
-                    socket.setSoTimeout(5000);
-                    socket.connect(socketAddress, 5000);
-
-                    if (socket.isConnected()) {
-                        Log.v("DEV", "SocketClass successfully connected!");
-
-                        oos = new ObjectOutputStream(socket.getOutputStream());
-
-                        oos.flush();
-                        oos.writeObject(file);
-
-                        oos.flush();
-                        oos.reset();
-
-                        ois = new ObjectInputStream(socket.getInputStream());
-                        int sz = (Integer) ois.readObject();
-                        System.out.println("Receving " + (sz / 1024) + " Bytes From Sever");
-
-                        byte b[] = new byte[sz];
-                        int bytesRead = ois.read(b, 0, b.length);
-                        for (int i = 0; i < sz; i++) {
-                            System.out.print(b[i]);
-                        }
-                        FileOutputStream fos = new FileOutputStream(new File(imageUri.getPath()));
-                        fos.write(b, 0, b.length);
-                        System.out.println("From Server : " + ois.readObject());
-                        oos.close();
-                        ois.close();
-                    }
-
-                } catch (Exception e) {
-                    Log.e("TCP", e.toString());
-                }
-            } catch (Exception e) {
-                Log.e("DEV", e.toString());
-            }
-            return null;
         }
     }
 }
