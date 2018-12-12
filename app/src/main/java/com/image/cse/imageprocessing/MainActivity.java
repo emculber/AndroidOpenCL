@@ -116,23 +116,27 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
+        int img = R.drawable.img4;
         if (view == btnImageOnload) {
             //MainActivityPermissionsDispatcher.startCameraWithCheck(this);
             isOffload = false;
             isLoop = false;
-            processImage(BitmapFactory.decodeResource(getResources(), R.drawable.testimage));
+            processImage(BitmapFactory.decodeResource(getResources(), img));
         } else if (view == btnImageOffload) {
-            MainActivityPermissionsDispatcher.startCameraWithCheck(this);
+            //MainActivityPermissionsDispatcher.startCameraWithCheck(this);
             isOffload = true;
             isLoop = false;
+            processImage(BitmapFactory.decodeResource(getResources(), img));
         } else if (view == btnImageOnloadWithLoad) {
-            MainActivityPermissionsDispatcher.startCameraWithCheck(this);
+            //MainActivityPermissionsDispatcher.startCameraWithCheck(this);
             isOffload = false;
             isLoop = true;
+            processImage(BitmapFactory.decodeResource(getResources(), img));
         } else if (view == btnImageOffloadWithLoad) {
-            MainActivityPermissionsDispatcher.startCameraWithCheck(this);
+            //MainActivityPermissionsDispatcher.startCameraWithCheck(this);
             isOffload = true;
             isLoop = true;
+            processImage(BitmapFactory.decodeResource(getResources(), img));
         } else {
             isOffload = false;
             isLoop = false;
@@ -203,7 +207,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
-    private void processImage(Bitmap bitmap) {
+    private void processImage(Bitmap inBitmap) {
         long startProcessTime;
         long endProcessTime;
         long endTime;
@@ -212,11 +216,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
         int heigth;
 
         long startTime = System.currentTimeMillis();
+        final Mat inputImage=new Mat();//The input image to be sent
+        Mat outputImage = new Mat();
+        Bitmap bitmap = inBitmap.copy(inBitmap.getConfig(), true);
 
         int count = 0;
         do {
-            final Mat inputImage=new Mat();//The input image to be sent
-            Utils.bitmapToMat(bitmap,inputImage); //change the bitmap to mat to pass the image as argument
+            Utils.bitmapToMat(inBitmap,inputImage); //change the bitmap to mat to pass the image as argument
             //final Mat outputImage=new Mat();//The result image to be returned
 
             Mat gradientX = new Mat();
@@ -226,10 +232,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
             Mat mySobel = new Mat();
 
             org.opencv.core.Size s = new Size(3,3);
-
-            int[] colors={0};
-            //Bitmap outputImageBitmap=Bitmap.createBitmap(colors,inputImage.cols(),inputImage.rows(),Bitmap.Config.RGB_565);// I think this creates a bitmap equals to inputImage height and width and RGB channels.
-            Mat outputImage = new Mat();
             startProcessTime = System.currentTimeMillis();
             if (isOffload) {
                 outputImage = new Mat(NativePart.sendImage(inputImage.getNativeObjAddr()));//call to native method
@@ -264,10 +266,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
             matrix.postRotate(90);
             width = bitmap.getWidth();
             heigth = bitmap.getHeight();
-            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(), bitmap.getHeight(), true);
-            Bitmap rotatedBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
+            //Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(), bitmap.getHeight(), true);
+            //Bitmap rotatedBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
             //ivPreview.setImageBitmap(outputImageBitmap);
-            ivPreview.setImageBitmap(rotatedBitmap);
+            //ivPreview.setImageBitmap(rotatedBitmap);
+            ivPreview.setImageBitmap(bitmap);
 
             endTime = System.currentTimeMillis();
             Log.i("", "Total Time: " + (endTime-startTime));
@@ -279,7 +282,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             int avgTimeProcess = (int)calculateAverage(timesProcess);
             String timeProcess = "Times: " + times.size() + " Total:" + diff + "(" + avgTime + ") Process: " + diffProcess + "(" + avgTimeProcess + ") : " + width + "x" + heigth;
             processTime.setText(timeProcess);
-            if(count == 10) {
+            if(count == 19) {
                 break;
             }
             count++;
