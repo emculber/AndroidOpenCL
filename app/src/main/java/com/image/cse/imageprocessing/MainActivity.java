@@ -26,6 +26,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -116,9 +117,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     public void onClick(View view) {
         if (view == btnImageOnload) {
-            MainActivityPermissionsDispatcher.startCameraWithCheck(this);
+            //MainActivityPermissionsDispatcher.startCameraWithCheck(this);
             isOffload = false;
             isLoop = false;
+            processImage(BitmapFactory.decodeResource(getResources(), R.drawable.testimage));
         } else if (view == btnImageOffload) {
             MainActivityPermissionsDispatcher.startCameraWithCheck(this);
             isOffload = true;
@@ -131,6 +133,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
             MainActivityPermissionsDispatcher.startCameraWithCheck(this);
             isOffload = true;
             isLoop = true;
+        } else {
+            isOffload = false;
+            isLoop = false;
+            processImage(BitmapFactory.decodeResource(getResources(), R.drawable.testimage));
         }
     }
 
@@ -169,78 +175,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        long startProcessTime;
-        long endProcessTime;
-        long endTime;
-
-        int width;
-        int heigth;
-
-        long startTime = System.currentTimeMillis();
-
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
-            int count = 0;
-            do {
-                // Show the thumbnail on ImageView
-                imageUri = Uri.parse(mCurrentPhotoPath);
-                file = new File(imageUri.getPath());
-                Log.i("", imageUri.getPath());
+            // Show the thumbnail on ImageView
+            imageUri = Uri.parse(mCurrentPhotoPath);
+            file = new File(imageUri.getPath());
+            Log.i("", imageUri.getPath());
 
-                try {
+            try {
 
-                    InputStream ims = new FileInputStream(file);
-                    Bitmap bitmap = BitmapFactory.decodeStream(ims);
-                    ivPreview.setImageBitmap(bitmap);
-
-                    final Mat inputImage=new Mat();//The input image to be sent
-                    Utils.bitmapToMat(bitmap,inputImage); //change the bitmap to mat to pass the image as argument
-                    //final Mat outputImage=new Mat();//The result image to be returned
-
-                    int[] colors={0};
-                    //Bitmap outputImageBitmap=Bitmap.createBitmap(colors,inputImage.cols(),inputImage.rows(),Bitmap.Config.RGB_565);// I think this creates a bitmap equals to inputImage height and width and RGB channels.
-                    Mat outputImage = new Mat();
-                    startProcessTime = System.currentTimeMillis();
-                    if (isOffload) {
-                        outputImage = new Mat(NativePart.sendImage(inputImage.getNativeObjAddr()));//call to native method
-                    } else {
-                        outputImage = new Mat(inputImage.size(), CvType.CV_8UC1);
-                        Imgproc.cvtColor(inputImage, outputImage, Imgproc.COLOR_RGB2GRAY, 4);
-                        Imgproc.Canny(outputImage, outputImage, 80, 100);
-                        Imgproc.blur(outputImage, outputImage, new Size(50, 50));
-                    }
-                    endProcessTime = System.currentTimeMillis();
-                    Log.i("", "Process Time: " + (endProcessTime - startProcessTime));
-                    //Utils.matToBitmap(outputImage,outputImageBitmap);//the outputImage is changed into Bitmap in order to be displayed in the image view
-                    Utils.matToBitmap(outputImage,bitmap);//the outputImage is changed into Bitmap in order to be displayed in the image view
-
-
-                    Matrix matrix = new Matrix();
-                    matrix.postRotate(90);
-                    width = bitmap.getWidth();
-                    heigth = bitmap.getHeight();
-                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(), bitmap.getHeight(), true);
-                    Bitmap rotatedBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
-                    //ivPreview.setImageBitmap(outputImageBitmap);
-                    ivPreview.setImageBitmap(rotatedBitmap);
-                } catch (FileNotFoundException e) {
-                    return;
-                }
-
-                endTime = System.currentTimeMillis();
-                Log.i("", "Total Time: " + (endTime-startTime));
-                long diffProcess = (endProcessTime-startProcessTime);
-                long diff = (endTime-startTime);
-                times.add(diff);
-                timesProcess.add(diffProcess);
-                int avgTime = (int)calculateAverage(times);
-                int avgTimeProcess = (int)calculateAverage(timesProcess);
-                String timeProcess = "Times: " + times.size() + " Total:" + diff + "(" + avgTime + ") Process: " + diffProcess + "(" + avgTimeProcess + ") : " + width + "x" + heigth;
-                processTime.setText(timeProcess);
-                if(count == 10) {
-                    break;
-                }
-                count++;
-            } while (isLoop);
+                InputStream ims = new FileInputStream(file);
+                Bitmap bitmap = BitmapFactory.decodeStream(ims);
+                ivPreview.setImageBitmap(bitmap);
+                processImage(bitmap);
+            } catch (FileNotFoundException e) {
+                return;
+            }
 
             file.delete();
 
@@ -252,6 +201,89 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         }
                     });
         }
+    }
+
+    private void processImage(Bitmap bitmap) {
+        long startProcessTime;
+        long endProcessTime;
+        long endTime;
+
+        int width;
+        int heigth;
+
+        long startTime = System.currentTimeMillis();
+
+        int count = 0;
+        do {
+            final Mat inputImage=new Mat();//The input image to be sent
+            Utils.bitmapToMat(bitmap,inputImage); //change the bitmap to mat to pass the image as argument
+            //final Mat outputImage=new Mat();//The result image to be returned
+
+            Mat gradientX = new Mat();
+            Mat gradientY = new Mat();
+            Mat absoluteX = new Mat();
+            Mat absoluteY = new Mat();
+            Mat mySobel = new Mat();
+
+            org.opencv.core.Size s = new Size(3,3);
+
+            int[] colors={0};
+            //Bitmap outputImageBitmap=Bitmap.createBitmap(colors,inputImage.cols(),inputImage.rows(),Bitmap.Config.RGB_565);// I think this creates a bitmap equals to inputImage height and width and RGB channels.
+            Mat outputImage = new Mat();
+            startProcessTime = System.currentTimeMillis();
+            if (isOffload) {
+                outputImage = new Mat(NativePart.sendImage(inputImage.getNativeObjAddr()));//call to native method
+            } else {
+                outputImage = new Mat(inputImage.size(), CvType.CV_8UC1);
+                Imgproc.cvtColor(inputImage, outputImage, Imgproc.COLOR_BGR2GRAY);
+                Imgproc.Sobel(outputImage, gradientX, 3, 1, 0, 3, 1, 0, 0);
+                Imgproc.Sobel(outputImage, gradientY, 3, 0, 1, 3, 1, 0, 0);
+
+                Core.convertScaleAbs(gradientX, absoluteX);
+                Core.convertScaleAbs(gradientY, absoluteY);
+
+                Core.addWeighted(absoluteX, 0.5, absoluteY, 0.5, 1, mySobel);
+
+                //Portion that makes the computer faster than the phone
+                for(int abs = 0; abs < 200; abs++)
+                {
+                    Imgproc.blur(mySobel, outputImage, s);
+                }
+
+                //Previous method of calculation
+                //Imgproc.Canny(outputImage, outputImage, 80, 100);
+                //Imgproc.blur(outputImage, outputImage, new Size(50, 50));*/
+            }
+            endProcessTime = System.currentTimeMillis();
+            Log.i("", "Process Time: " + (endProcessTime - startProcessTime));
+            //Utils.matToBitmap(outputImage,outputImageBitmap);//the outputImage is changed into Bitmap in order to be displayed in the image view
+            Utils.matToBitmap(outputImage,bitmap);//the outputImage is changed into Bitmap in order to be displayed in the image view
+
+
+            Matrix matrix = new Matrix();
+            matrix.postRotate(90);
+            width = bitmap.getWidth();
+            heigth = bitmap.getHeight();
+            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(), bitmap.getHeight(), true);
+            Bitmap rotatedBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
+            //ivPreview.setImageBitmap(outputImageBitmap);
+            ivPreview.setImageBitmap(rotatedBitmap);
+
+            endTime = System.currentTimeMillis();
+            Log.i("", "Total Time: " + (endTime-startTime));
+            long diffProcess = (endProcessTime-startProcessTime);
+            long diff = (endTime-startTime);
+            times.add(diff);
+            timesProcess.add(diffProcess);
+            int avgTime = (int)calculateAverage(times);
+            int avgTimeProcess = (int)calculateAverage(timesProcess);
+            String timeProcess = "Times: " + times.size() + " Total:" + diff + "(" + avgTime + ") Process: " + diffProcess + "(" + avgTimeProcess + ") : " + width + "x" + heigth;
+            processTime.setText(timeProcess);
+            if(count == 10) {
+                break;
+            }
+            count++;
+        } while (isLoop);
     }
 
     private double calculateAverage(List<Long> marks) {
